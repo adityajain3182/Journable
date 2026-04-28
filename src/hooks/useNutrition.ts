@@ -118,6 +118,8 @@ export function useNutrition() {
   useEffect(() => {
     if (profile) {
       localStorage.setItem("nutrition_profile", JSON.stringify(profile));
+    } else {
+      localStorage.removeItem("nutrition_profile");
     }
   }, [profile]);
 
@@ -125,7 +127,10 @@ export function useNutrition() {
     const now = new Date();
     const newFood: FoodItem = {
       ...item,
-      id: Math.random().toString(36).substring(7),
+      id:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${now.getTime()}-${Math.random().toString(36).slice(2, 10)}`,
       timestamp: now.toISOString(),
       dateString: format(selectedDate, "yyyy-MM-dd"), // attach to currently selected date
     };

@@ -13,7 +13,7 @@ export function ChatInput({ onFoodParsed }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = async () => {
-    if (!input.trim() && !isLoading) return;
+    if (!input.trim() || isLoading) return;
     setIsLoading(true);
     try {
       const parsed = await parseFoodInput(input);

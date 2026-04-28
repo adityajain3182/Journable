@@ -18,7 +18,7 @@ export async function parseFoodInput(
   
   if (text) {
     parts.push({ text: `Analyze this food input and provide nutritional estimates. Input: "${text}"` });
-  } else if (!imageBlob) {
+  } else if (imageBlob) {
      parts.push({ text: "Analyze the provided food image and provide nutritional estimates for what you see." });
   }
 
@@ -34,7 +34,7 @@ export async function parseFoodInput(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-2.5-flash",
       contents: { parts },
       config: {
         systemInstruction: "You are an expert nutritionist. Analyze the requested food items and return a JSON list of identified foods with their estimated nutritional values per serving. If multiple distinct items are present, return multiple objects. Be as accurate as possible. If the input is vague, make a reasonable estimate.",
@@ -106,7 +106,7 @@ export async function calculateMacros(profile: UserProfile): Promise<{calories: 
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",

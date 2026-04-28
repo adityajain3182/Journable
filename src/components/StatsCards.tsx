@@ -9,7 +9,10 @@ interface StatsCardsProps {
 
 export function StatsCards({ totals, goals }: StatsCardsProps) {
   const caloriesRemaining = goals.calories - totals.calories;
-  
+  const goalRatio = goals.calories > 0 ? totals.calories / goals.calories : 0;
+  const goalPercent = Math.max(0, Math.round(goalRatio * 100));
+  const barPercent = Math.min(100, Math.max(0, goalRatio * 100));
+
   return (
     <div className="grid grid-cols-3 gap-3 px-6 mb-6">
       {/* Calories Card */}
@@ -17,7 +20,7 @@ export function StatsCards({ totals, goals }: StatsCardsProps) {
         <div className="flex justify-between items-start mb-2">
           <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Calories Remaining</span>
           <span className="px-2 py-1 bg-[#CCFF00]/10 text-[#CCFF00] text-[10px] font-bold rounded-full border border-[#CCFF00]/20 uppercase tracking-wider">
-            {Math.max(0, Math.round((totals.calories / goals.calories) * 100))}% GOAL
+            {goalPercent}% GOAL
           </span>
         </div>
         <div className="flex items-end space-x-2 mb-4 mt-2">
@@ -25,7 +28,7 @@ export function StatsCards({ totals, goals }: StatsCardsProps) {
           <span className="text-zinc-500 mb-2 font-bold uppercase text-xs tracking-widest">kcal left</span>
         </div>
         <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-          <div className="bg-[#CCFF00] h-full transition-all duration-500" style={{ width: `${Math.min(100, (totals.calories / goals.calories) * 100)}%` }}></div>
+          <div className="bg-[#CCFF00] h-full transition-all duration-500" style={{ width: `${barPercent}%` }}></div>
         </div>
       </div>
 
