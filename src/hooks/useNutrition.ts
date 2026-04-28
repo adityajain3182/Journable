@@ -21,6 +21,13 @@ export type Goal = {
   fat: number;
 };
 
+export type WaterEntry = {
+  id: string;
+  amount: number; // milliliters
+  dateString: string;
+  timestamp: string;
+};
+
 const DEFAULT_GOAL: Goal = {
   calories: 2222,
   carbs: 255,
@@ -59,6 +66,16 @@ export function useNutrition() {
     return null;
   });
 
+  const [waterEntries, setWaterEntries] = useState<WaterEntry[]>(() => {
+    const saved = localStorage.getItem("nutrition_water");
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved) as WaterEntry[];
+    } catch {
+      return [];
+    }
+  });
+
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
 
   useEffect(() => {
@@ -77,6 +94,10 @@ export function useNutrition() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    localStorage.setItem("nutrition_water", JSON.stringify(waterEntries));
+  }, [waterEntries]);
+
   const addFood = (item: Omit<FoodItem, "id" | "timestamp" | "dateString">) => {
     const now = new Date();
     const newFood: FoodItem = {
@@ -93,6 +114,23 @@ export function useNutrition() {
 
   const removeFood = (id: string) => {
     setFoods((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const addWaterEntry = (input: { amount: number; dateString: string }) => {
+    const now = new Date();
+    const newEntry: WaterEntry = {
+      ...input,
+      id:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${now.getTime()}-${Math.random().toString(36).slice(2, 10)}`,
+      timestamp: now.toISOString(),
+    };
+    setWaterEntries((prev) => [newEntry, ...prev]);
+  };
+
+  const removeWaterEntry = (id: string) => {
+    setWaterEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -120,5 +158,8 @@ export function useNutrition() {
     removeFood,
     dailyFoods,
     dailyTotals,
+    waterEntries,
+    addWaterEntry,
+    removeWaterEntry,
   };
 }

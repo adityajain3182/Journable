@@ -8,6 +8,7 @@ import { FoodList } from './components/FoodList';
 import { ChatInput } from './components/ChatInput';
 import { Drawer } from './components/Drawer';
 import { StreakView } from './components/StreakView';
+import { WaterTracker } from './components/WaterTracker';
 import { ParsedFood } from './lib/gemini';
 import { GoalModal } from './components/GoalModal';
 
@@ -23,12 +24,15 @@ export default function App() {
     addFood,
     removeFood,
     dailyTotals,
-    dailyFoods
+    dailyFoods,
+    waterEntries,
+    addWaterEntry,
+    removeWaterEntry,
   } = useNutrition();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'streak'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'streak' | 'water'>('dashboard');
 
   const handleFoodParsed = (parsedFoods: ParsedFood[]) => {
     parsedFoods.forEach(food => {
@@ -40,6 +44,18 @@ export default function App() {
     return <StreakView onBack={() => setCurrentPage('dashboard')} goals={goals} foods={foods} profile={profile} />;
   }
 
+  if (currentPage === 'water') {
+    return (
+      <WaterTracker
+        onBack={() => setCurrentPage('dashboard')}
+        entries={waterEntries}
+        profile={profile}
+        onAdd={addWaterEntry}
+        onRemove={removeWaterEntry}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white pb-20 font-sans">
       <Drawer 
@@ -48,6 +64,8 @@ export default function App() {
         onNavigate={(page) => {
           if (page === 'streak') {
             setCurrentPage('streak');
+          } else if (page === 'water') {
+            setCurrentPage('water');
           } else if (page === 'goals') {
             setIsGoalModalOpen(true);
           }
