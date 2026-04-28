@@ -21,6 +21,14 @@ export type Goal = {
   fat: number;
 };
 
+export type WeightEntry = {
+  id: string;
+  weight: number;
+  unit: 'kg' | 'lbs';
+  dateString: string;
+  timestamp: string;
+};
+
 const DEFAULT_GOAL: Goal = {
   calories: 2222,
   carbs: 255,
@@ -59,6 +67,16 @@ export function useNutrition() {
     return null;
   });
 
+  const [weightEntries, setWeightEntries] = useState<WeightEntry[]>(() => {
+    const saved = localStorage.getItem("nutrition_weights");
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved) as WeightEntry[];
+    } catch {
+      return [];
+    }
+  });
+
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
 
   useEffect(() => {
@@ -77,6 +95,10 @@ export function useNutrition() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    localStorage.setItem("nutrition_weights", JSON.stringify(weightEntries));
+  }, [weightEntries]);
+
   const addFood = (item: Omit<FoodItem, "id" | "timestamp" | "dateString">) => {
     const now = new Date();
     const newFood: FoodItem = {
@@ -93,6 +115,27 @@ export function useNutrition() {
 
   const removeFood = (id: string) => {
     setFoods((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const addWeightEntry = (input: { weight: number; unit: 'kg' | 'lbs'; dateString: string }) => {
+    const now = new Date();
+    const newEntry: WeightEntry = {
+      ...input,
+      id:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${now.getTime()}-${Math.random().toString(36).slice(2, 10)}`,
+      timestamp: now.toISOString(),
+    };
+    // One entry per date: replace any existing entry on the same dateString.
+    setWeightEntries((prev) => [
+      newEntry,
+      ...prev.filter((e) => e.dateString !== input.dateString),
+    ]);
+  };
+
+  const removeWeightEntry = (id: string) => {
+    setWeightEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -120,5 +163,8 @@ export function useNutrition() {
     removeFood,
     dailyFoods,
     dailyTotals,
+    weightEntries,
+    addWeightEntry,
+    removeWeightEntry,
   };
 }
