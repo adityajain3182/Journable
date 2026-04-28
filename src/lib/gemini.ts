@@ -1,6 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.error(
+    "GEMINI_API_KEY is not set. Add it to .env.local at the project root and restart `npm run dev`."
+  );
+}
+
+const ai = new GoogleGenAI({ apiKey: apiKey ?? "" });
 
 export type ParsedFood = {
   name: string;
@@ -75,7 +82,12 @@ export async function parseFoodInput(
     return JSON.parse(jsonStr) as ParsedFood[];
   } catch (error) {
     console.error("Error parsing food:", error);
-    throw new Error("Failed to analyze food.");
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      apiKey
+        ? `Failed to analyze food: ${detail}`
+        : "Failed to analyze food: GEMINI_API_KEY is not set. Add it to .env.local and restart the dev server."
+    );
   }
 }
 
@@ -133,7 +145,12 @@ export async function calculateMacros(profile: UserProfile): Promise<{calories: 
     };
   } catch (error) {
     console.error("Error calculating macros:", error);
-    throw new Error("Failed to calculate macros.");
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      apiKey
+        ? `Failed to calculate macros: ${detail}`
+        : "Failed to calculate macros: GEMINI_API_KEY is not set. Add it to .env.local and restart the dev server."
+    );
   }
 }
 
