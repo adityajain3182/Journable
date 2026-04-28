@@ -28,70 +28,24 @@ const DEFAULT_GOAL: Goal = {
   fat: 71,
 };
 
-// Initial mock data simulating the screenshot
-const generateMockData = () => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    return [
-      {
-        id: "1",
-        name: "Paneer Rice (0.5 cup)",
-        calories: 180,
-        carbs: 25,
-        protein: 6,
-        fat: 7,
-        timestamp: new Date().toISOString(),
-        dateString: today,
-      },
-      {
-        id: "2",
-        name: "Lemon Soda (1 glass)",
-        calories: 120,
-        carbs: 30,
-        protein: 0,
-        fat: 0,
-        timestamp: new Date().toISOString(),
-        dateString: today,
-      },
-       {
-        id: "3",
-        name: "Green Tea (1 cup)",
-        calories: 2,
-        carbs: 0,
-        protein: 0,
-        fat: 0,
-        timestamp: new Date().toISOString(),
-        dateString: today,
-      },
-      {
-        id: "4",
-        name: "Roti (1 piece)",
-        calories: 120,
-        carbs: 20,
-        protein: 3,
-        fat: 3,
-        timestamp: new Date().toISOString(),
-        dateString: today,
-      },
-      {
-        id: "5",
-        name: "Aloo Gobhi Beans Sabzi (1 cup)",
-        calories: 150,
-        carbs: 20,
-        protein: 4,
-        fat: 7,
-        timestamp: new Date().toISOString(),
-        dateString: today,
-      }
-    ];
+// IDs used by the original mock seed; purged on load so existing users
+// don't keep seeing the sample entries after upgrading.
+const LEGACY_MOCK_IDS = new Set(["1", "2", "3", "4", "5"]);
+
+const loadStoredFoods = (): FoodItem[] => {
+  const saved = localStorage.getItem("nutrition_foods");
+  if (!saved) return [];
+  try {
+    const parsed = JSON.parse(saved) as FoodItem[];
+    return parsed.filter((f) => !LEGACY_MOCK_IDS.has(f.id));
+  } catch {
+    return [];
+  }
 };
 
 
 export function useNutrition() {
-  const [foods, setFoods] = useState<FoodItem[]>(() => {
-    const saved = localStorage.getItem("nutrition_foods");
-    if (saved) return JSON.parse(saved);
-    return generateMockData();
-  });
+  const [foods, setFoods] = useState<FoodItem[]>(loadStoredFoods);
 
   const [goals, setGoals] = useState<Goal>(() => {
     const saved = localStorage.getItem("nutrition_goals");
