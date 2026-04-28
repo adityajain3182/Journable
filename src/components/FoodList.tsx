@@ -83,7 +83,7 @@ export function FoodList({ foods, totals, goals, onRemove }: FoodListProps) {
 }
 
 function ProgressBar({ current, target, color }: { current: number, target: number, color: string }) {
-  const percentage = Math.min(100, Math.round((current / target) * 100)) || 0;
+  const percentage = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   return (
     <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
       <div className={clsx("h-full rounded-full transition-all duration-500", color)} style={{ width: `${percentage}%` }} />

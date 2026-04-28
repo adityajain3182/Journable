@@ -37,7 +37,7 @@ export default function App() {
   };
 
   if (currentPage === 'streak') {
-    return <StreakView onBack={() => setCurrentPage('dashboard')} goals={goals} totals={dailyTotals} />;
+    return <StreakView onBack={() => setCurrentPage('dashboard')} goals={goals} foods={foods} profile={profile} />;
   }
 
   return (

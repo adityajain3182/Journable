@@ -13,14 +13,15 @@ export function ChatInput({ onFoodParsed }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = async () => {
-    if (!input.trim() && !isLoading) return;
+    if (!input.trim() || isLoading) return;
     setIsLoading(true);
     try {
       const parsed = await parseFoodInput(input);
       onFoodParsed(parsed);
       setInput("");
     } catch (error) {
-      alert("Failed to analyze text. Please try again.");
+      const msg = error instanceof Error ? error.message : "Failed to analyze text.";
+      alert(msg);
     } finally {
       setIsLoading(false);
     }
@@ -35,7 +36,8 @@ export function ChatInput({ onFoodParsed }: ChatInputProps) {
       const parsed = await parseFoodInput(undefined, file);
       onFoodParsed(parsed);
     } catch (error) {
-      alert("Failed to analyze image. Please try again.");
+      const msg = error instanceof Error ? error.message : "Failed to analyze image.";
+      alert(msg);
     } finally {
       setIsLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
