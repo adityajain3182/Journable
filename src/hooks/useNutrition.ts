@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { format, startOfToday } from "date-fns";
 
 import { UserProfile } from "../lib/gemini";
+import { readUserJson, writeUserJson } from "../lib/storage";
 
 export type FoodItem = {
   id: string;
@@ -28,54 +29,31 @@ const DEFAULT_GOAL: Goal = {
   fat: 71,
 };
 
-// IDs used by the original mock seed; purged on load so existing users
-// don't keep seeing the sample entries after upgrading.
-const LEGACY_MOCK_IDS = new Set(["1", "2", "3", "4", "5"]);
-
-const loadStoredFoods = (): FoodItem[] => {
-  const saved = localStorage.getItem("nutrition_foods");
-  if (!saved) return [];
-  try {
-    const parsed = JSON.parse(saved) as FoodItem[];
-    return parsed.filter((f) => !LEGACY_MOCK_IDS.has(f.id));
-  } catch {
-    return [];
-  }
-};
-
-
-export function useNutrition() {
-  const [foods, setFoods] = useState<FoodItem[]>(loadStoredFoods);
-
-  const [goals, setGoals] = useState<Goal>(() => {
-    const saved = localStorage.getItem("nutrition_goals");
-    if (saved) return JSON.parse(saved);
-    return DEFAULT_GOAL;
-  });
-
-  const [profile, setProfile] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem("nutrition_profile");
-    if (saved) return JSON.parse(saved);
-    return null;
-  });
-
+export function useNutrition(userId: string) {
+  const [foods, setFoods] = useState<FoodItem[]>(() =>
+    readUserJson<FoodItem[]>(userId, "foods", [])
+  );
+  const [goals, setGoals] = useState<Goal>(() =>
+    readUserJson<Goal>(userId, "goals", DEFAULT_GOAL)
+  );
+  const [profile, setProfile] = useState<UserProfile | null>(() =>
+    readUserJson<UserProfile | null>(userId, "profile", null)
+  );
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
 
+  // The owning component is keyed by userId, so this hook is freshly mounted
+  // per user — userId is stable for the hook's lifetime.
   useEffect(() => {
-    localStorage.setItem("nutrition_foods", JSON.stringify(foods));
-  }, [foods]);
+    writeUserJson(userId, "foods", foods);
+  }, [userId, foods]);
 
   useEffect(() => {
-    localStorage.setItem("nutrition_goals", JSON.stringify(goals));
-  }, [goals]);
+    writeUserJson(userId, "goals", goals);
+  }, [userId, goals]);
 
   useEffect(() => {
-    if (profile) {
-      localStorage.setItem("nutrition_profile", JSON.stringify(profile));
-    } else {
-      localStorage.removeItem("nutrition_profile");
-    }
-  }, [profile]);
+    writeUserJson(userId, "profile", profile);
+  }, [userId, profile]);
 
   const addFood = (item: Omit<FoodItem, "id" | "timestamp" | "dateString">) => {
     const now = new Date();
@@ -86,7 +64,7 @@ export function useNutrition() {
           ? crypto.randomUUID()
           : `${now.getTime()}-${Math.random().toString(36).slice(2, 10)}`,
       timestamp: now.toISOString(),
-      dateString: format(selectedDate, "yyyy-MM-dd"), // attach to currently selected date
+      dateString: format(selectedDate, "yyyy-MM-dd"),
     };
     setFoods((prev) => [newFood, ...prev]);
   };
