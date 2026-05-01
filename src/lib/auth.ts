@@ -18,8 +18,18 @@ const SESSION_KEY = "journable:session";
 
 import { sendOTPEmail } from "./email";
 
+const OTP_TTL_MS = 10 * 60 * 1000;   // code valid for 10 minutes
+const OTP_COOLDOWN_MS = 60 * 1000;    // must wait 60 s before requesting a new code
+const OTP_MAX_ATTEMPTS = 3;            // wrong guesses before the code is invalidated
+
 // In-memory OTP store — intentionally not persisted so codes die on reload.
-type OTPEntry = { code: string; expiresAt: number; purpose: "signup" | "reset" };
+type OTPEntry = {
+  code: string;
+  expiresAt: number;
+  purpose: "signup" | "reset";
+  attempts: number;       // wrong-guess counter
+  canResendAt: number;    // earliest timestamp a resend is allowed
+};
 const pendingOTPs = new Map<string, OTPEntry>();
 
 function loadUsers(): StoredUser[] {
@@ -77,7 +87,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Generates an OTP and emails it to the user via EmailJS.
- * Throws a user-visible error when the precondition is not met or the send fails.
+ *
+ * Rate-limited: a second request for the same email is rejected until the
+ * 60-second cooldown elapses, preventing both spam and network-tab fishing
+ * (rapidly requesting fresh codes to read them from the payload).
  */
 export async function requestOTP(
   email: string,
@@ -85,6 +98,14 @@ export async function requestOTP(
 ): Promise<void> {
   const key = email.trim().toLowerCase();
   if (!EMAIL_RE.test(key)) throw new Error("Please enter a valid email address.");
+
+  // Cooldown check — applies to resends too.
+  const existing = pendingOTPs.get(key);
+  if (existing && Date.now() < existing.canResendAt) {
+    const secsLeft = Math.ceil((existing.canResendAt - Date.now()) / 1000);
+    throw new Error(`Please wait ${secsLeft} second${secsLeft !== 1 ? "s" : ""} before requesting a new code.`);
+  }
+
   const users = loadUsers();
   if (purpose === "signup" && users.some((u) => u.email === key)) {
     throw new Error("An account with this email already exists.");
@@ -92,27 +113,53 @@ export async function requestOTP(
   if (purpose === "reset" && !users.some((u) => u.email === key)) {
     throw new Error("No account found with this email.");
   }
+
   const code = generateOTPCode();
-  pendingOTPs.set(key, { code, expiresAt: Date.now() + 10 * 60 * 1000, purpose });
+  pendingOTPs.set(key, {
+    code,
+    expiresAt: Date.now() + OTP_TTL_MS,
+    purpose,
+    attempts: 0,
+    canResendAt: Date.now() + OTP_COOLDOWN_MS,
+  });
   await sendOTPEmail(key, code);
 }
 
-/** Returns true and clears the entry when the code matches. */
+/**
+ * Verifies a submitted OTP code.
+ * Throws on wrong code so the caller can surface the remaining-attempts count.
+ * Deletes the entry (and throws) after OTP_MAX_ATTEMPTS wrong guesses.
+ */
 export function verifyOTP(
   email: string,
   code: string,
   purpose: "signup" | "reset"
-): boolean {
+): void {
   const key = email.trim().toLowerCase();
   const entry = pendingOTPs.get(key);
-  if (!entry || entry.purpose !== purpose) return false;
+
+  if (!entry || entry.purpose !== purpose) {
+    throw new Error("No active code found. Please request a new one.");
+  }
   if (Date.now() > entry.expiresAt) {
     pendingOTPs.delete(key);
-    return false;
+    throw new Error("Your code has expired. Please request a new one.");
   }
-  if (entry.code !== code.trim()) return false;
+
+  if (entry.code !== code.trim()) {
+    entry.attempts += 1;
+    const remaining = OTP_MAX_ATTEMPTS - entry.attempts;
+    if (remaining <= 0) {
+      pendingOTPs.delete(key);
+      throw new Error("Too many incorrect attempts. Please request a new code.");
+    }
+    throw new Error(
+      `Incorrect code. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.`
+    );
+  }
+
+  // Correct — consume the entry.
   pendingOTPs.delete(key);
-  return true;
 }
 
 // ─── Auth actions ─────────────────────────────────────────────────────────────
