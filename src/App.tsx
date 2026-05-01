@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { Menu, Users } from 'lucide-react';
 import { useNutrition } from './hooks/useNutrition';
@@ -12,6 +12,7 @@ import { ParsedFood } from './lib/gemini';
 import { GoalModal } from './components/GoalModal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthScreen } from './components/AuthScreen';
+import { AppLoader } from './components/AppLoader';
 import { SessionUser } from './lib/auth';
 
 export default function App() {
@@ -24,10 +25,35 @@ export default function App() {
 
 function AuthGate() {
   const { user } = useAuth();
-  if (!user) return <AuthScreen />;
-  // Keying by user.id ensures all per-user state (foods, goals, profile) is
-  // fully reset on login/logout/account-switch.
-  return <AppShell key={user.id} user={user} />;
+  const prevUserRef = useRef<SessionUser | null>(user); // null only on true fresh-login
+  const [showLoader, setShowLoader] = useState(false);
+  // activeUser tracks who is actually rendered in AppShell.
+  // Initialised to `user` so page-reloads with a valid session skip the loader.
+  const [activeUser, setActiveUser] = useState<SessionUser | null>(user);
+
+  useEffect(() => {
+    const prev = prevUserRef.current;
+    prevUserRef.current = user;
+
+    if (user && !prev) {
+      // Fresh login / signup — show the loader before entering the app.
+      setShowLoader(true);
+      const t = setTimeout(() => {
+        setShowLoader(false);
+        setActiveUser(user);
+      }, 2600);
+      return () => clearTimeout(t);
+    }
+
+    if (!user) {
+      setActiveUser(null);
+    }
+  }, [user]);
+
+  if (showLoader) return <AppLoader />;
+  if (!activeUser) return <AuthScreen />;
+  // key ensures all per-user state is fully reset on account switch.
+  return <AppShell key={activeUser.id} user={activeUser} />;
 }
 
 function initialsOf(name: string): string {
