@@ -7,10 +7,10 @@ import { OTPInput } from "./OTPInput";
 type View =
   | "login"
   | "signup"
-  | "signup-otp"    // OTP gate before creating account
-  | "forgot-email"  // Enter email for password reset
-  | "forgot-otp"    // OTP gate for reset
-  | "reset-password"; // Enter new password
+  | "signup-otp"
+  | "forgot-email"
+  | "forgot-otp"
+  | "reset-password";
 
 interface FormState {
   displayName: string;
@@ -18,8 +18,6 @@ interface FormState {
   password: string;
   newPassword: string;
   otp: string;
-  /** The generated OTP code — shown in UI since there's no email backend. */
-  generatedCode: string;
 }
 
 const EMPTY: FormState = {
@@ -28,7 +26,6 @@ const EMPTY: FormState = {
   password: "",
   newPassword: "",
   otp: "",
-  generatedCode: "",
 };
 
 export function AuthScreen() {
@@ -67,19 +64,18 @@ export function AuthScreen() {
     });
   };
 
-  // ── Signup step 1: collect details + send OTP ──────────────────────────────
+  // ── Signup step 1: validate + send OTP ────────────────────────────────────
   const handleSignupRequest = (e: React.FormEvent) => {
     e.preventDefault();
     wrap(async () => {
       if (!form.displayName.trim()) throw new Error("Display name is required.");
       if (form.password.length < 6) throw new Error("Password must be at least 6 characters.");
-      const code = requestOTP(form.email, "signup");
-      set("generatedCode", code);
+      await requestOTP(form.email, "signup");
       setView("signup-otp");
     });
   };
 
-  // ── Signup step 2: verify OTP then create account ─────────────────────────
+  // ── Signup step 2: verify OTP → create account ────────────────────────────
   const handleSignupVerify = (e: React.FormEvent) => {
     e.preventDefault();
     wrap(async () => {
@@ -90,12 +86,11 @@ export function AuthScreen() {
     });
   };
 
-  // ── Forgot step 1: send OTP to email ──────────────────────────────────────
+  // ── Forgot step 1: send OTP ────────────────────────────────────────────────
   const handleForgotRequest = (e: React.FormEvent) => {
     e.preventDefault();
     wrap(async () => {
-      const code = requestOTP(form.email, "reset");
-      set("generatedCode", code);
+      await requestOTP(form.email, "reset");
       setView("forgot-otp");
     });
   };
@@ -112,7 +107,7 @@ export function AuthScreen() {
     });
   };
 
-  // ── Forgot step 3: set new password ───────────────────────────────────────
+  // ── Forgot step 3: new password ───────────────────────────────────────────
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     wrap(async () => {
@@ -123,8 +118,7 @@ export function AuthScreen() {
 
   const resendOTP = (purpose: "signup" | "reset") =>
     wrap(async () => {
-      const code = requestOTP(form.email, purpose);
-      set("generatedCode", code);
+      await requestOTP(form.email, purpose);
       set("otp", "");
     });
 
@@ -134,7 +128,7 @@ export function AuthScreen() {
     <div className="min-h-screen bg-[#050505] text-white flex flex-col justify-center px-6 font-sans">
       <div className="max-w-sm w-full mx-auto">
 
-        {/* Brand header */}
+        {/* Brand */}
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-[#CCFF00] rounded-xl flex items-center justify-center text-black font-black italic text-xl">
             J
@@ -149,16 +143,11 @@ export function AuthScreen() {
               Sign in to continue
             </p>
             <form onSubmit={handleLogin} className="flex flex-col gap-3">
-              <AuthInput
-                type="email" placeholder="Email" value={form.email}
-                onChange={(v) => set("email", v)} autoComplete="email" disabled={busy}
-              />
-              <AuthInput
-                type="password" placeholder="Password" value={form.password}
-                onChange={(v) => set("password", v)} autoComplete="current-password" disabled={busy}
-              />
-              <button
-                type="button"
+              <AuthInput type="email" placeholder="Email" value={form.email}
+                onChange={(v) => set("email", v)} autoComplete="email" disabled={busy} />
+              <AuthInput type="password" placeholder="Password" value={form.password}
+                onChange={(v) => set("password", v)} autoComplete="current-password" disabled={busy} />
+              <button type="button"
                 onClick={() => { setView("forgot-email"); setError(null); }}
                 className="text-[#CCFF00]/70 hover:text-[#CCFF00] text-xs font-bold uppercase tracking-widest text-right -mt-1 self-end"
               >
@@ -167,11 +156,8 @@ export function AuthScreen() {
               <ErrorMsg msg={error} />
               <SubmitBtn busy={busy} label="Sign in" />
             </form>
-            <SwitchMode
-              label="Need an account?"
-              action="Sign up"
-              onClick={() => { setView("signup"); setForm(EMPTY); setError(null); }}
-            />
+            <SwitchMode label="Need an account?" action="Sign up"
+              onClick={() => { setView("signup"); setForm(EMPTY); setError(null); }} />
           </>
         )}
 
@@ -183,26 +169,16 @@ export function AuthScreen() {
               Create your account
             </p>
             <form onSubmit={handleSignupRequest} className="flex flex-col gap-3">
-              <AuthInput
-                type="text" placeholder="Display name" value={form.displayName}
-                onChange={(v) => set("displayName", v)} autoComplete="name" disabled={busy}
-              />
-              <AuthInput
-                type="email" placeholder="Email" value={form.email}
-                onChange={(v) => set("email", v)} autoComplete="email" disabled={busy}
-              />
-              <AuthInput
-                type="password" placeholder="Password (min 6 chars)" value={form.password}
-                onChange={(v) => set("password", v)} autoComplete="new-password" disabled={busy}
-              />
+              <AuthInput type="text" placeholder="Display name" value={form.displayName}
+                onChange={(v) => set("displayName", v)} autoComplete="name" disabled={busy} />
+              <AuthInput type="email" placeholder="Email" value={form.email}
+                onChange={(v) => set("email", v)} autoComplete="email" disabled={busy} />
+              <AuthInput type="password" placeholder="Password (min 6 chars)" value={form.password}
+                onChange={(v) => set("password", v)} autoComplete="new-password" disabled={busy} />
               <ErrorMsg msg={error} />
               <SubmitBtn busy={busy} label="Send verification code" />
             </form>
-            <SwitchMode
-              label="Already have an account?"
-              action="Sign in"
-              onClick={resetToLogin}
-            />
+            <SwitchMode label="Already have an account?" action="Sign in" onClick={resetToLogin} />
           </>
         )}
 
@@ -211,40 +187,15 @@ export function AuthScreen() {
           <>
             <BackBtn onClick={() => { setView("signup"); setError(null); }} />
             <p className="text-zinc-500 text-xs uppercase tracking-widest font-bold mb-2">
-              Verify your email
+              Check your inbox
             </p>
-            <p className="text-zinc-600 text-xs mb-8 leading-relaxed">
-              We'd send a code to <span className="text-white font-bold">{form.email}</span>.
-              Since this app runs locally, your code is shown below.
-            </p>
-
-            {/* Simulated email card */}
-            <div className="bg-[#CCFF00]/5 border border-[#CCFF00]/20 rounded-2xl p-4 mb-6 flex items-center gap-3">
-              <Mail className="w-5 h-5 text-[#CCFF00] shrink-0" />
-              <div>
-                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Your code</div>
-                <div className="text-2xl font-black tracking-[0.3em] text-[#CCFF00]">
-                  {form.generatedCode}
-                </div>
-              </div>
-            </div>
-
+            <InboxNote email={form.email} />
             <form onSubmit={handleSignupVerify} className="flex flex-col gap-5">
-              <OTPInput
-                onChange={(v) => set("otp", v)}
-                disabled={busy}
-              />
+              <OTPInput onChange={(v) => set("otp", v)} disabled={busy} />
               <ErrorMsg msg={error} />
               <SubmitBtn busy={busy} label="Verify & create account" />
             </form>
-
-            <button
-              onClick={() => resendOTP("signup")}
-              disabled={busy}
-              className="flex items-center gap-1.5 mx-auto mt-4 text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest disabled:opacity-40"
-            >
-              <RefreshCw className="w-3 h-3" /> Resend code
-            </button>
+            <ResendBtn onClick={() => resendOTP("signup")} disabled={busy} />
           </>
         )}
 
@@ -259,10 +210,8 @@ export function AuthScreen() {
               Enter the email address tied to your account and we'll send a verification code.
             </p>
             <form onSubmit={handleForgotRequest} className="flex flex-col gap-3">
-              <AuthInput
-                type="email" placeholder="Email" value={form.email}
-                onChange={(v) => set("email", v)} autoComplete="email" disabled={busy}
-              />
+              <AuthInput type="email" placeholder="Email" value={form.email}
+                onChange={(v) => set("email", v)} autoComplete="email" disabled={busy} />
               <ErrorMsg msg={error} />
               <SubmitBtn busy={busy} label="Send reset code" />
             </form>
@@ -274,38 +223,15 @@ export function AuthScreen() {
           <>
             <BackBtn onClick={() => { setView("forgot-email"); setError(null); }} />
             <p className="text-zinc-500 text-xs uppercase tracking-widest font-bold mb-2">
-              Enter your code
+              Check your inbox
             </p>
-            <p className="text-zinc-600 text-xs mb-8 leading-relaxed">
-              Code for <span className="text-white font-bold">{form.email}</span>
-            </p>
-
-            <div className="bg-[#CCFF00]/5 border border-[#CCFF00]/20 rounded-2xl p-4 mb-6 flex items-center gap-3">
-              <Mail className="w-5 h-5 text-[#CCFF00] shrink-0" />
-              <div>
-                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Your code</div>
-                <div className="text-2xl font-black tracking-[0.3em] text-[#CCFF00]">
-                  {form.generatedCode}
-                </div>
-              </div>
-            </div>
-
+            <InboxNote email={form.email} />
             <form onSubmit={handleForgotVerify} className="flex flex-col gap-5">
-              <OTPInput
-                onChange={(v) => set("otp", v)}
-                disabled={busy}
-              />
+              <OTPInput onChange={(v) => set("otp", v)} disabled={busy} />
               <ErrorMsg msg={error} />
               <SubmitBtn busy={busy} label="Verify code" />
             </form>
-
-            <button
-              onClick={() => resendOTP("reset")}
-              disabled={busy}
-              className="flex items-center gap-1.5 mx-auto mt-4 text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest disabled:opacity-40"
-            >
-              <RefreshCw className="w-3 h-3" /> Resend code
-            </button>
+            <ResendBtn onClick={() => resendOTP("reset")} disabled={busy} />
           </>
         )}
 
@@ -316,10 +242,8 @@ export function AuthScreen() {
               Set new password
             </p>
             <form onSubmit={handleResetPassword} className="flex flex-col gap-3">
-              <AuthInput
-                type="password" placeholder="New password (min 6 chars)" value={form.newPassword}
-                onChange={(v) => set("newPassword", v)} autoComplete="new-password" disabled={busy}
-              />
+              <AuthInput type="password" placeholder="New password (min 6 chars)" value={form.newPassword}
+                onChange={(v) => set("newPassword", v)} autoComplete="new-password" disabled={busy} />
               <ErrorMsg msg={error} />
               <SubmitBtn busy={busy} label="Update password" />
             </form>
@@ -337,22 +261,44 @@ export function AuthScreen() {
   );
 }
 
-// ── Small shared sub-components ───────────────────────────────────────────────
+// ── Shared sub-components ─────────────────────────────────────────────────────
 
-function AuthInput({
-  type, placeholder, value, onChange, autoComplete, disabled,
-}: {
+function InboxNote({ email }: { email: string }) {
+  return (
+    <div className="bg-[#CCFF00]/5 border border-[#CCFF00]/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
+      <Mail className="w-5 h-5 text-[#CCFF00] shrink-0 mt-0.5" />
+      <p className="text-xs text-zinc-400 leading-relaxed">
+        A 6-digit code has been sent to{" "}
+        <span className="text-white font-bold">{email}</span>.{" "}
+        Check your spam folder if it doesn't arrive within a minute.
+        The code expires in <span className="text-[#CCFF00]">10 minutes</span>.
+      </p>
+    </div>
+  );
+}
+
+function ResendBtn({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-1.5 mx-auto mt-4 text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest disabled:opacity-40"
+    >
+      <RefreshCw className="w-3 h-3" /> Resend code
+    </button>
+  );
+}
+
+function AuthInput({ type, placeholder, value, onChange, autoComplete, disabled }: {
   type: string; placeholder: string; value: string;
   onChange: (v: string) => void; autoComplete?: string; disabled?: boolean;
 }) {
   return (
     <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
+      type={type} placeholder={placeholder} value={value}
       onChange={(e) => onChange(e.target.value)}
-      autoComplete={autoComplete}
-      disabled={disabled}
+      autoComplete={autoComplete} disabled={disabled}
       className="bg-[#1A1A1A] border border-zinc-800 rounded-2xl px-4 py-3 text-sm placeholder-zinc-600 focus:outline-none focus:border-[#CCFF00]/50 disabled:opacity-50"
     />
   );
@@ -360,9 +306,7 @@ function AuthInput({
 
 function SubmitBtn({ busy, label }: { busy: boolean; label: string }) {
   return (
-    <button
-      type="submit"
-      disabled={busy}
+    <button type="submit" disabled={busy}
       className="bg-[#CCFF00] text-black font-black uppercase tracking-widest text-xs py-3 rounded-2xl hover:bg-[#b3ff00] transition disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
     >
       {busy && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -373,16 +317,12 @@ function SubmitBtn({ busy, label }: { busy: boolean; label: string }) {
 
 function ErrorMsg({ msg }: { msg: string | null }) {
   if (!msg) return null;
-  return (
-    <div className="text-red-400 text-xs font-bold uppercase tracking-widest">{msg}</div>
-  );
+  return <div className="text-red-400 text-xs font-bold uppercase tracking-widest">{msg}</div>;
 }
 
 function BackBtn({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <button type="button" onClick={onClick}
       className="flex items-center gap-1.5 text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest mb-6 -ml-0.5"
     >
       <ArrowLeft className="w-3.5 h-3.5" /> Back
@@ -392,8 +332,7 @@ function BackBtn({ onClick }: { onClick: () => void }) {
 
 function SwitchMode({ label, action, onClick }: { label: string; action: string; onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
+    <button onClick={onClick}
       className="text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest mt-6 w-full text-center"
     >
       {label} <span className="text-[#CCFF00]">{action}</span>

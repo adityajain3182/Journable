@@ -16,6 +16,8 @@ export type SessionUser = {
 const USERS_KEY = "journable:users";
 const SESSION_KEY = "journable:session";
 
+import { sendOTPEmail } from "./email";
+
 // In-memory OTP store — intentionally not persisted so codes die on reload.
 type OTPEntry = { code: string; expiresAt: number; purpose: "signup" | "reset" };
 const pendingOTPs = new Map<string, OTPEntry>();
@@ -74,14 +76,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // ─── OTP ──────────────────────────────────────────────────────────────────────
 
 /**
- * Generates an OTP for signup or password-reset flows.
- * Returns the code so the caller can display it (no email backend).
- * Throws a user-visible error when the precondition is not met.
+ * Generates an OTP and emails it to the user via EmailJS.
+ * Throws a user-visible error when the precondition is not met or the send fails.
  */
-export function requestOTP(
+export async function requestOTP(
   email: string,
   purpose: "signup" | "reset"
-): string {
+): Promise<void> {
   const key = email.trim().toLowerCase();
   if (!EMAIL_RE.test(key)) throw new Error("Please enter a valid email address.");
   const users = loadUsers();
@@ -93,7 +94,7 @@ export function requestOTP(
   }
   const code = generateOTPCode();
   pendingOTPs.set(key, { code, expiresAt: Date.now() + 10 * 60 * 1000, purpose });
-  return code;
+  await sendOTPEmail(key, code);
 }
 
 /** Returns true and clears the entry when the code matches. */
