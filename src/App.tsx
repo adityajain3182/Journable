@@ -7,13 +7,14 @@ import { StatsCards } from './components/StatsCards';
 import { FoodList } from './components/FoodList';
 import { ChatInput } from './components/ChatInput';
 import { Drawer } from './components/Drawer';
-import { StreakView } from './components/StreakView';
 import { ParsedFood } from './lib/gemini';
 import { GoalModal } from './components/GoalModal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthScreen } from './components/AuthScreen';
 import { AppLoader } from './components/AppLoader';
 import { SessionUser } from './lib/auth';
+import { useNav } from './navigation/useNav';
+import { getPageComponent } from './navigation/routes';
 
 export default function App() {
   return (
@@ -64,55 +65,43 @@ function initialsOf(name: string): string {
 }
 
 function AppShell({ user }: { user: SessionUser }) {
-  const {
+  const nutrition = useNutrition(user.id);
+  const nav = useNav();
+
+  const { foods, goals, setGoals, profile, setProfile,
+          selectedDate, setSelectedDate, addFood, removeFood,
+          dailyTotals, dailyFoods } = nutrition;
+
+  // Build the standard props bag once — every registered page receives this.
+  const pageProps = {
+    onBack:     nav.goBack,
+    userId:     user.id,
+    goals,      setGoals,
     foods,
-    goals,
-    setGoals,
-    profile,
-    setProfile,
-    selectedDate,
-    setSelectedDate,
-    addFood,
-    removeFood,
-    dailyTotals,
-    dailyFoods,
-  } = useNutrition(user.id);
+    profile,    setProfile,
+  };
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'streak'>('dashboard');
+  // If a registered full-page view is active, render it exclusively.
+  const ActivePage = getPageComponent(nav.currentPage);
+  if (ActivePage) {
+    return <ActivePage {...pageProps} />;
+  }
 
+  // ── Dashboard ──────────────────────────────────────────────────────────────
   const handleFoodParsed = (parsedFoods: ParsedFood[]) => {
     parsedFoods.forEach((food) => addFood(food));
   };
 
-  if (currentPage === 'streak') {
-    return (
-      <StreakView
-        onBack={() => setCurrentPage('dashboard')}
-        goals={goals}
-        foods={foods}
-        profile={profile}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#050505] text-white pb-20 font-sans">
       <Drawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onNavigate={(page) => {
-          if (page === 'streak') {
-            setCurrentPage('streak');
-          } else if (page === 'goals') {
-            setIsGoalModalOpen(true);
-          }
-        }}
+        isOpen={nav.isDrawerOpen}
+        onClose={nav.closeDrawer}
+        onNavigate={nav.navigate}
       />
       <GoalModal
-        isOpen={isGoalModalOpen}
-        onClose={() => setIsGoalModalOpen(false)}
+        isOpen={nav.openModal === 'goals'}
+        onClose={nav.closeModal}
         goals={goals}
         onSave={setGoals}
         profile={profile}
@@ -123,7 +112,7 @@ function AppShell({ user }: { user: SessionUser }) {
         <div className="flex items-center gap-4">
           <button
             className="p-1 -ml-1 text-zinc-400 hover:text-white transition-colors focus:outline-none"
-            onClick={() => setIsDrawerOpen(true)}
+            onClick={nav.openDrawer}
           >
             <Menu className="w-7 h-7" strokeWidth={2} />
           </button>
@@ -143,7 +132,9 @@ function AppShell({ user }: { user: SessionUser }) {
         </div>
 
         <div className="flex items-center gap-4 text-zinc-400">
-          <button className="hover:text-white transition-colors"><Users className="w-6 h-6" strokeWidth={2} /></button>
+          <button className="hover:text-white transition-colors">
+            <Users className="w-6 h-6" strokeWidth={2} />
+          </button>
           <div
             className="w-10 h-10 rounded-full bg-[#CCFF00] flex items-center justify-center text-black font-black text-sm"
             title={user.displayName}

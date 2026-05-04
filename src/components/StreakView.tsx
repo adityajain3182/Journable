@@ -2,15 +2,10 @@ import React from 'react';
 import { ArrowLeft, BarChart2 } from 'lucide-react';
 import { format, startOfDay, startOfWeek, addDays, subDays, parseISO, isAfter } from 'date-fns';
 import clsx from 'clsx';
-import { Goal, FoodItem } from '../hooks/useNutrition';
-import { UserProfile } from '../lib/gemini';
+import { PageProps } from '../navigation/routes';
 
-interface StreakViewProps {
-  onBack: () => void;
-  goals: Goal;
-  foods: FoodItem[];
-  profile: UserProfile | null;
-}
+// StreakView uses a subset of PageProps — the rest are received but unused.
+type StreakViewProps = PageProps;
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
