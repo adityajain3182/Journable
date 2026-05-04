@@ -68,6 +68,9 @@ export function useNutrition(userId: string) {
   const [weightEntries, setWeightEntries] = useState<WeightEntry[]>(() =>
     readUserJson<WeightEntry[]>(userId, "weight", [])
   );
+  const [photo, setPhoto] = useState<string | null>(() =>
+    readUserJson<string | null>(userId, "photo", null)
+  );
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
 
   // ── Persistence ──────────────────────────────────────────────────────────
@@ -78,6 +81,7 @@ export function useNutrition(userId: string) {
   useEffect(() => { writeUserJson(userId, "profile", profile);       }, [userId, profile]);
   useEffect(() => { writeUserJson(userId, "water",   waterEntries);  }, [userId, waterEntries]);
   useEffect(() => { writeUserJson(userId, "weight",  weightEntries); }, [userId, weightEntries]);
+  useEffect(() => { writeUserJson(userId, "photo",   photo);         }, [userId, photo]);
 
   // ── Food actions ─────────────────────────────────────────────────────────
   const addFood = (item: Omit<FoodItem, "id" | "timestamp" | "dateString">) => {
@@ -148,5 +152,6 @@ export function useNutrition(userId: string) {
     dailyFoods, dailyTotals,
     waterEntries,  addWaterEntry,  removeWaterEntry,
     weightEntries, addWeightEntry, removeWeightEntry,
+    photo, setPhoto,
   };
 }

@@ -33,6 +33,10 @@ export interface PageProps {
   weightEntries: WeightEntry[];
   addWeightEntry: (input: { weight: number; unit: 'kg' | 'lbs'; dateString: string }) => void;
   removeWeightEntry: (id: string) => void;
+
+  // Profile photo (data URL stored in per-user localStorage; null = use initials)
+  photo: string | null;
+  setPhoto: (p: string | null) => void;
 }
 
 // ─── Modal identifiers ────────────────────────────────────────────────────────

@@ -73,6 +73,7 @@ function AppShell({ user }: { user: SessionUser }) {
     dailyTotals, dailyFoods,
     waterEntries,  addWaterEntry,  removeWaterEntry,
     weightEntries, addWeightEntry, removeWeightEntry,
+    photo, setPhoto,
   } = nutrition;
 
   // Build the standard props bag once — every registered page receives this.
@@ -84,6 +85,7 @@ function AppShell({ user }: { user: SessionUser }) {
     profile, setProfile,
     waterEntries,  addWaterEntry,  removeWaterEntry,
     weightEntries, addWeightEntry, removeWeightEntry,
+    photo, setPhoto,
   };
 
   // If a registered full-page view is active, render it exclusively.
@@ -142,11 +144,13 @@ function AppShell({ user }: { user: SessionUser }) {
           </button>
           <button
             onClick={() => nav.navigate('profile')}
-            className="w-10 h-10 rounded-full bg-[#CCFF00] flex items-center justify-center text-black font-black text-sm hover:scale-105 active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/40"
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm overflow-hidden hover:scale-105 active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/40 ${photo ? 'bg-zinc-800' : 'bg-[#CCFF00] text-black font-black'}`}
             title={`${user.displayName} — open profile`}
             aria-label="Open profile"
           >
-            {initialsOf(user.displayName)}
+            {photo
+              ? <img src={photo} alt="" className="w-full h-full object-cover" />
+              : initialsOf(user.displayName)}
           </button>
         </div>
       </header>
