@@ -7,9 +7,6 @@ import { StatsCards } from './components/StatsCards';
 import { FoodList } from './components/FoodList';
 import { ChatInput } from './components/ChatInput';
 import { Drawer } from './components/Drawer';
-import { StreakView } from './components/StreakView';
-import { WaterTracker } from './components/WaterTracker';
-import { WeightTracker } from './components/WeightTracker';
 import { ParsedFood } from './lib/gemini';
 import { GoalModal } from './components/GoalModal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -17,7 +14,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { AppLoader } from './components/AppLoader';
 import { SessionUser } from './lib/auth';
 import { useNav } from './navigation/useNav';
-import { getPageComponent } from './navigation/routes';
+import { getPageComponent, PageProps } from './navigation/routes';
 
 export default function App() {
   return (
@@ -29,9 +26,8 @@ export default function App() {
 
 function AuthGate() {
   const { user } = useAuth();
-  const prevUserRef = useRef<SessionUser | null>(user); // null only on true fresh-login
+  const prevUserRef = useRef<SessionUser | null>(user);
   const [showLoader, setShowLoader] = useState(false);
-  // activeUser tracks who is actually rendered in AppShell.
   // Initialised to `user` so page-reloads with a valid session skip the loader.
   const [activeUser, setActiveUser] = useState<SessionUser | null>(user);
 
@@ -62,7 +58,7 @@ function AuthGate() {
 
 function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
+  if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
@@ -71,43 +67,26 @@ function AppShell({ user }: { user: SessionUser }) {
   const nutrition = useNutrition(user.id);
   const nav = useNav();
 
-  const { foods, goals, setGoals, profile, setProfile,
-          selectedDate, setSelectedDate, addFood, removeFood,
-          dailyTotals, dailyFoods } = nutrition;
+  const {
+    foods, goals, setGoals, profile, setProfile,
+    selectedDate, setSelectedDate, addFood, removeFood,
+    dailyTotals, dailyFoods,
+    waterEntries,  addWaterEntry,  removeWaterEntry,
+    weightEntries, addWeightEntry, removeWeightEntry,
+  } = nutrition;
 
   // Build the standard props bag once — every registered page receives this.
-  const pageProps = {
-    onBack:     nav.goBack,
-    userId:     user.id,
-    goals,      setGoals,
+  const pageProps: PageProps = {
+    onBack: nav.goBack,
+    userId: user.id,
+    goals, setGoals,
     foods,
-    setGoals,
-    setProfile,
-    selectedDate,
-    setSelectedDate,
-    addFood,
-    removeFood,
-    dailyTotals,
-    dailyFoods,
-    waterEntries,
-    addWaterEntry,
-    removeWaterEntry,
-    weightEntries,
-    addWeightEntry,
-    removeWeightEntry,
-  } = useNutrition();
-
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'streak' | 'water'>('dashboard');
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'streak' | 'weight'>('dashboard');
-
-  const handleFoodParsed = (parsedFoods: ParsedFood[]) => {
-    parsedFoods.forEach(food => {
-      addFood(food);
-    });
+    profile, setProfile,
+    waterEntries,  addWaterEntry,  removeWaterEntry,
+    weightEntries, addWeightEntry, removeWeightEntry,
   };
 
+  // If a registered full-page view is active, render it exclusively.
   const ActivePage = getPageComponent(nav.currentPage);
   if (ActivePage) {
     return <ActivePage {...pageProps} />;
@@ -124,42 +103,6 @@ function AppShell({ user }: { user: SessionUser }) {
         isOpen={nav.isDrawerOpen}
         onClose={nav.closeDrawer}
         onNavigate={nav.navigate}
-  if (currentPage === 'water') {
-    return (
-      <WaterTracker
-        onBack={() => setCurrentPage('dashboard')}
-        entries={waterEntries}
-        profile={profile}
-        onAdd={addWaterEntry}
-        onRemove={removeWaterEntry}
-  if (currentPage === 'weight') {
-    return (
-      <WeightTracker
-        onBack={() => setCurrentPage('dashboard')}
-        entries={weightEntries}
-        profile={profile}
-        onAdd={addWeightEntry}
-        onRemove={removeWeightEntry}
-      />
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#050505] text-white pb-20 font-sans">
-      <Drawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onNavigate={(page) => {
-          if (page === 'streak') {
-            setCurrentPage('streak');
-          } else if (page === 'water') {
-            setCurrentPage('water');
-          } else if (page === 'weight') {
-            setCurrentPage('weight');
-          } else if (page === 'goals') {
-            setIsGoalModalOpen(true);
-          }
-        }}
       />
       <GoalModal
         isOpen={nav.openModal === 'goals'}

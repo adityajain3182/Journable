@@ -4,14 +4,7 @@ import { format, parseISO, startOfDay, addDays, getDayOfYear } from 'date-fns';
 import clsx from 'clsx';
 import { WaterEntry } from '../hooks/useNutrition';
 import { UserProfile } from '../lib/gemini';
-
-interface WaterTrackerProps {
-  onBack: () => void;
-  entries: WaterEntry[];
-  profile: UserProfile | null;
-  onAdd: (input: { amount: number; dateString: string }) => void;
-  onRemove: (id: string) => void;
-}
+import { PageProps } from '../navigation/routes';
 
 const HYDRATION_FACTS = [
   "About 60% of an adult's body weight is water.",
@@ -65,7 +58,13 @@ const QUICK_AMOUNTS: { label: string; ml: number }[] = [
   { label: 'Large', ml: 750 },
 ];
 
-export function WaterTracker({ onBack, entries, profile, onAdd, onRemove }: WaterTrackerProps) {
+export function WaterTracker({
+  onBack,
+  profile,
+  waterEntries: entries,
+  addWaterEntry: onAdd,
+  removeWaterEntry: onRemove,
+}: PageProps) {
   const today = startOfDay(new Date());
   const todayStr = format(today, 'yyyy-MM-dd');
   const dailyGoal = recommendedIntakeMl(profile);
