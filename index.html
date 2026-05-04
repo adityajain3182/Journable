@@ -2,12 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Journable — AI Nutrition Tracker</title>
+    <meta name="description" content="AI-powered nutrition, water, and weight tracker." />
+
+    <!-- Theme color drives Android's status-bar tint when launched as a PWA. -->
+    <meta name="theme-color" content="#050505" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon-source.svg" />
+
+    <!-- iOS Safari "Add to Home Screen" support -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Journable" />
+
+    <!-- Match the app's safe-area background while the splash renders. -->
+    <style>
+      html, body { background-color: #050505; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
