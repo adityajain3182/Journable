@@ -3,6 +3,7 @@ import { PageProps, ModalId, RouteEntry } from './types';
 import { StreakView } from '../components/StreakView';
 import { WaterTracker } from '../components/WaterTracker';
 import { WeightTracker } from '../components/WeightTracker';
+import { ProfilePage } from '../components/ProfilePage';
 
 // Re-export for callers that already import from this module.
 export type { PageProps, ModalId, RouteEntry } from './types';
@@ -18,9 +19,10 @@ export type { PageProps, ModalId, RouteEntry } from './types';
 //
 export const ROUTES: RouteEntry[] = [
   // ── Pages ────────────────────────────────────────────────────────────────
-  { kind: 'page', id: 'streak', component: StreakView },
-  { kind: 'page', id: 'water',  component: WaterTracker },
-  { kind: 'page', id: 'weight', component: WeightTracker },
+  { kind: 'page', id: 'streak',  component: StreakView },
+  { kind: 'page', id: 'water',   component: WaterTracker },
+  { kind: 'page', id: 'weight',  component: WeightTracker },
+  { kind: 'page', id: 'profile', component: ProfilePage },
   // { kind: 'page', id: 'reminders', component: RemindersView },
   // { kind: 'page', id: 'groups',    component: GroupsView },
 

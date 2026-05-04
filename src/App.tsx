@@ -140,12 +140,14 @@ function AppShell({ user }: { user: SessionUser }) {
           <button className="hover:text-white transition-colors">
             <Users className="w-6 h-6" strokeWidth={2} />
           </button>
-          <div
-            className="w-10 h-10 rounded-full bg-[#CCFF00] flex items-center justify-center text-black font-black text-sm"
-            title={user.displayName}
+          <button
+            onClick={() => nav.navigate('profile')}
+            className="w-10 h-10 rounded-full bg-[#CCFF00] flex items-center justify-center text-black font-black text-sm hover:scale-105 active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/40"
+            title={`${user.displayName} — open profile`}
+            aria-label="Open profile"
           >
             {initialsOf(user.displayName)}
-          </div>
+          </button>
         </div>
       </header>
 
