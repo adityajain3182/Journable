@@ -4,7 +4,7 @@ import { format, parseISO, differenceInDays, startOfDay, subDays, addDays, isAft
 import clsx from 'clsx';
 import { WeightEntry } from '../hooks/useNutrition';
 import { UserProfile } from '../lib/gemini';
-import { PageProps } from '../navigation/routes';
+import { PageProps } from '../navigation/types';
 
 type Range = 'week' | 'month';
 

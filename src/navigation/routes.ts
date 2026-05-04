@@ -1,65 +1,20 @@
 import React from 'react';
-import { Goal, FoodItem, WaterEntry, WeightEntry } from '../hooks/useNutrition';
-import { UserProfile } from '../lib/gemini';
+import { PageProps, ModalId, RouteEntry } from './types';
 import { StreakView } from '../components/StreakView';
 import { WaterTracker } from '../components/WaterTracker';
 import { WeightTracker } from '../components/WeightTracker';
 
-// ─── Standard prop contract for every full-page view ─────────────────────────
-//
-// AppShell builds one PageProps object and hands it to whichever page is
-// active. Each page uses only the fields it needs — extra ones are ignored.
-// When a new page needs data that isn't here yet, add it once to PageProps
-// and AppShell, no other file changes required.
-//
-export interface PageProps {
-  onBack: () => void;
-  userId: string;
-
-  // Nutrition
-  goals: Goal;
-  setGoals: (g: Goal) => void;
-  foods: FoodItem[];
-  profile: UserProfile | null;
-  setProfile: (p: UserProfile | null) => void;
-
-  // Water
-  waterEntries: WaterEntry[];
-  addWaterEntry: (input: { amount: number; dateString: string }) => void;
-  removeWaterEntry: (id: string) => void;
-
-  // Weight
-  weightEntries: WeightEntry[];
-  addWeightEntry: (input: { weight: number; unit: 'kg' | 'lbs'; dateString: string }) => void;
-  removeWeightEntry: (id: string) => void;
-}
-
-// ─── Modal identifiers ────────────────────────────────────────────────────────
-
-export type ModalId = 'goals';
-
-// ─── Route entries ────────────────────────────────────────────────────────────
-
-type PageEntry = {
-  kind: 'page';
-  id: string;
-  component: React.ComponentType<PageProps>;
-};
-
-type ModalEntry = {
-  kind: 'modal';
-  id: string;
-  modal: ModalId;
-};
-
-export type RouteEntry = PageEntry | ModalEntry;
+// Re-export for callers that already import from this module.
+export type { PageProps, ModalId, RouteEntry } from './types';
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
 //
 // To add a new page:
 //   1. Create the component in src/components/ implementing PageProps
-//   2. Import it here and add one entry below
-//   3. AppShell and Drawer need no changes
+//      (import PageProps from '../navigation/types', NOT from routes.ts —
+//       importing from routes.ts re-introduces the circular dependency.)
+//   2. Import it here and add one entry to ROUTES.
+//   3. AppShell and Drawer need no changes.
 //
 export const ROUTES: RouteEntry[] = [
   // ── Pages ────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import { format, parseISO, startOfDay, addDays, getDayOfYear } from 'date-fns';
 import clsx from 'clsx';
 import { WaterEntry } from '../hooks/useNutrition';
 import { UserProfile } from '../lib/gemini';
-import { PageProps } from '../navigation/routes';
+import { PageProps } from '../navigation/types';
 
 const HYDRATION_FACTS = [
   "About 60% of an adult's body weight is water.",

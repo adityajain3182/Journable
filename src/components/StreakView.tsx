@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowLeft, BarChart2 } from 'lucide-react';
 import { format, startOfDay, startOfWeek, addDays, subDays, parseISO, isAfter } from 'date-fns';
 import clsx from 'clsx';
-import { PageProps } from '../navigation/routes';
+import { PageProps } from '../navigation/types';
 
 // StreakView uses a subset of PageProps — the rest are received but unused.
 type StreakViewProps = PageProps;
