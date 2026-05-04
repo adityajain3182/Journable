@@ -24,6 +24,10 @@ export type Goal = {
 export type WaterEntry = {
   id: string;
   amount: number; // milliliters
+export type WeightEntry = {
+  id: string;
+  weight: number;
+  unit: 'kg' | 'lbs';
   dateString: string;
   timestamp: string;
 };
@@ -71,6 +75,11 @@ export function useNutrition() {
     if (!saved) return [];
     try {
       return JSON.parse(saved) as WaterEntry[];
+  const [weightEntries, setWeightEntries] = useState<WeightEntry[]>(() => {
+    const saved = localStorage.getItem("nutrition_weights");
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved) as WeightEntry[];
     } catch {
       return [];
     }
@@ -97,6 +106,8 @@ export function useNutrition() {
   useEffect(() => {
     localStorage.setItem("nutrition_water", JSON.stringify(waterEntries));
   }, [waterEntries]);
+    localStorage.setItem("nutrition_weights", JSON.stringify(weightEntries));
+  }, [weightEntries]);
 
   const addFood = (item: Omit<FoodItem, "id" | "timestamp" | "dateString">) => {
     const now = new Date();
@@ -119,6 +130,9 @@ export function useNutrition() {
   const addWaterEntry = (input: { amount: number; dateString: string }) => {
     const now = new Date();
     const newEntry: WaterEntry = {
+  const addWeightEntry = (input: { weight: number; unit: 'kg' | 'lbs'; dateString: string }) => {
+    const now = new Date();
+    const newEntry: WeightEntry = {
       ...input,
       id:
         typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -131,6 +145,15 @@ export function useNutrition() {
 
   const removeWaterEntry = (id: string) => {
     setWaterEntries((prev) => prev.filter((e) => e.id !== id));
+    // One entry per date: replace any existing entry on the same dateString.
+    setWeightEntries((prev) => [
+      newEntry,
+      ...prev.filter((e) => e.dateString !== input.dateString),
+    ]);
+  };
+
+  const removeWeightEntry = (id: string) => {
+    setWeightEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -161,5 +184,8 @@ export function useNutrition() {
     waterEntries,
     addWaterEntry,
     removeWaterEntry,
+    weightEntries,
+    addWeightEntry,
+    removeWeightEntry,
   };
 }
