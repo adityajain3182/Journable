@@ -21,6 +21,9 @@ export type Goal = {
   fat: number;
 };
 
+export type WaterEntry = {
+  id: string;
+  amount: number; // milliliters
 export type WeightEntry = {
   id: string;
   weight: number;
@@ -67,6 +70,11 @@ export function useNutrition() {
     return null;
   });
 
+  const [waterEntries, setWaterEntries] = useState<WaterEntry[]>(() => {
+    const saved = localStorage.getItem("nutrition_water");
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved) as WaterEntry[];
   const [weightEntries, setWeightEntries] = useState<WeightEntry[]>(() => {
     const saved = localStorage.getItem("nutrition_weights");
     if (!saved) return [];
@@ -96,6 +104,8 @@ export function useNutrition() {
   }, [profile]);
 
   useEffect(() => {
+    localStorage.setItem("nutrition_water", JSON.stringify(waterEntries));
+  }, [waterEntries]);
     localStorage.setItem("nutrition_weights", JSON.stringify(weightEntries));
   }, [weightEntries]);
 
@@ -117,6 +127,9 @@ export function useNutrition() {
     setFoods((prev) => prev.filter((f) => f.id !== id));
   };
 
+  const addWaterEntry = (input: { amount: number; dateString: string }) => {
+    const now = new Date();
+    const newEntry: WaterEntry = {
   const addWeightEntry = (input: { weight: number; unit: 'kg' | 'lbs'; dateString: string }) => {
     const now = new Date();
     const newEntry: WeightEntry = {
@@ -127,6 +140,11 @@ export function useNutrition() {
           : `${now.getTime()}-${Math.random().toString(36).slice(2, 10)}`,
       timestamp: now.toISOString(),
     };
+    setWaterEntries((prev) => [newEntry, ...prev]);
+  };
+
+  const removeWaterEntry = (id: string) => {
+    setWaterEntries((prev) => prev.filter((e) => e.id !== id));
     // One entry per date: replace any existing entry on the same dateString.
     setWeightEntries((prev) => [
       newEntry,
@@ -163,6 +181,9 @@ export function useNutrition() {
     removeFood,
     dailyFoods,
     dailyTotals,
+    waterEntries,
+    addWaterEntry,
+    removeWaterEntry,
     weightEntries,
     addWeightEntry,
     removeWeightEntry,
