@@ -4,14 +4,7 @@ import { format, parseISO, differenceInDays, startOfDay, subDays, addDays, isAft
 import clsx from 'clsx';
 import { WeightEntry } from '../hooks/useNutrition';
 import { UserProfile } from '../lib/gemini';
-
-interface WeightTrackerProps {
-  onBack: () => void;
-  entries: WeightEntry[];
-  profile: UserProfile | null;
-  onAdd: (input: { weight: number; unit: 'kg' | 'lbs'; dateString: string }) => void;
-  onRemove: (id: string) => void;
-}
+import { PageProps } from '../navigation/types';
 
 type Range = 'week' | 'month';
 
@@ -26,7 +19,13 @@ function convertWeight(value: number, from: 'kg' | 'lbs', to: 'kg' | 'lbs'): num
   return from === 'kg' ? value * 2.20462 : value / 2.20462;
 }
 
-export function WeightTracker({ onBack, entries, profile, onAdd, onRemove }: WeightTrackerProps) {
+export function WeightTracker({
+  onBack,
+  profile,
+  weightEntries: entries,
+  addWeightEntry: onAdd,
+  removeWeightEntry: onRemove,
+}: PageProps) {
   const [range, setRange] = useState<Range>('week');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const todayStr = format(startOfDay(new Date()), 'yyyy-MM-dd');
