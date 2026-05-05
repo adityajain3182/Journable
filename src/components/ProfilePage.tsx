@@ -156,22 +156,24 @@ export function ProfilePage({
             )}
           </div>
 
-          {/* Edit / delete overlay — fixed at the bottom-left of the circle */}
-          <div className="absolute bottom-0 left-0 flex gap-1.5">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label={photo ? 'Change profile photo' : 'Upload profile photo'}
-              className="w-7 h-7 rounded-full bg-[#CCFF00] hover:bg-[#b3ff00] text-black flex items-center justify-center shadow-md ring-2 ring-[#050505] focus:outline-none focus:ring-[#CCFF00] transition-colors"
-            >
-              <Edit2 className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </button>
-            {photo && (
+          {/* Single overlay action — pencil to upload when no photo, trash to
+              remove when a photo is set. Same position either way. */}
+          <div className="absolute bottom-0 left-0">
+            {!photo ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Upload profile photo"
+                className="w-7 h-7 rounded-full bg-[#CCFF00] hover:bg-[#b3ff00] text-black flex items-center justify-center shadow-md ring-2 ring-[#050505] focus:outline-none focus:ring-[#CCFF00] transition-colors"
+              >
+                <Edit2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={() => setPhoto(null)}
                 aria-label="Remove profile photo"
-                className="w-7 h-7 rounded-full bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-400 flex items-center justify-center shadow-md ring-2 ring-[#050505] focus:outline-none focus:ring-red-400 transition-colors"
+                className="w-7 h-7 rounded-full bg-transparent border border-zinc-500 text-zinc-200 hover:border-red-400 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center ring-2 ring-[#050505] focus:outline-none focus:ring-red-400 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" strokeWidth={2.5} />
               </button>
