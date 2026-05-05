@@ -148,7 +148,7 @@ function AppShell({ user }: { user: SessionUser }) {
               the same shared helper so it can never drift from that page. */}
           <button
             onClick={() => nav.navigate('streak')}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#CCFF00]/10 border border-[#CCFF00]/20 hover:bg-[#CCFF00]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/40"
+            className="flex items-center gap-1 px-2.5 py-1.5"
             title={`${streak}-day streak — open weekly summary`}
             aria-label={`${streak} day streak`}
           >
