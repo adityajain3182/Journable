@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
-  ArrowLeft, LogOut, Edit2, User, Target, Mail, IdCard, Camera, Trash2,
+  ArrowLeft, LogOut, Edit2, User, Target, Mail, IdCard, Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageProps } from '../navigation/types';
@@ -138,46 +138,47 @@ export function ProfilePage({
           className="hidden"
           onChange={handleFile}
         />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          aria-label={photo ? 'Change profile photo' : 'Upload profile photo'}
-          className={clsx(
-            'relative group w-24 h-24 rounded-full overflow-hidden mb-4 shadow-lg shadow-[#CCFF00]/10',
-            'focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/50',
-            !photo && 'bg-[#CCFF00]'
-          )}
-        >
-          {photo ? (
-            <img src={photo} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="w-full h-full flex items-center justify-center text-black font-black italic text-3xl select-none">
-              {initialsOf(user.displayName)}
-            </span>
-          )}
-          {/* Hover/active overlay with camera affordance */}
-          <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/45 group-active:bg-black/60 transition-colors">
-            <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity" />
-          </span>
-        </button>
 
-        {/* Photo controls */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="text-[#CCFF00] hover:text-[#b3ff00] text-[10px] font-bold uppercase tracking-widest"
+        <div className="relative w-24 h-24 mb-5">
+          {/* Avatar — image when set, lime initials chip otherwise */}
+          <div
+            className={clsx(
+              'w-full h-full rounded-full overflow-hidden shadow-lg shadow-[#CCFF00]/10',
+              !photo && 'bg-[#CCFF00] flex items-center justify-center'
+            )}
           >
-            {photo ? 'Change photo' : 'Upload photo'}
-          </button>
-          {photo && (
+            {photo ? (
+              <img src={photo} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-black font-black italic text-3xl select-none">
+                {initialsOf(user.displayName)}
+              </span>
+            )}
+          </div>
+
+          {/* Edit / delete overlay — fixed at the bottom-left of the circle */}
+          <div className="absolute bottom-0 left-0 flex gap-1.5">
             <button
-              onClick={() => setPhoto(null)}
-              className="flex items-center gap-1 text-zinc-500 hover:text-red-400 text-[10px] font-bold uppercase tracking-widest"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label={photo ? 'Change profile photo' : 'Upload profile photo'}
+              className="w-7 h-7 rounded-full bg-[#CCFF00] hover:bg-[#b3ff00] text-black flex items-center justify-center shadow-md ring-2 ring-[#050505] focus:outline-none focus:ring-[#CCFF00] transition-colors"
             >
-              <Trash2 className="w-3 h-3" /> Remove
+              <Edit2 className="w-3.5 h-3.5" strokeWidth={2.5} />
             </button>
-          )}
+            {photo && (
+              <button
+                type="button"
+                onClick={() => setPhoto(null)}
+                aria-label="Remove profile photo"
+                className="w-7 h-7 rounded-full bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-400 flex items-center justify-center shadow-md ring-2 ring-[#050505] focus:outline-none focus:ring-red-400 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+              </button>
+            )}
+          </div>
         </div>
+
         {photoError && (
           <p className="text-red-400 text-[11px] font-bold uppercase tracking-widest mb-3">{photoError}</p>
         )}
