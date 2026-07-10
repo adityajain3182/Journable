@@ -1,8 +1,9 @@
 import React from 'react';
 import { ArrowLeft, BarChart2 } from 'lucide-react';
-import { format, startOfDay, startOfWeek, addDays, subDays, parseISO, isAfter } from 'date-fns';
+import { format, startOfDay, startOfWeek, addDays, isAfter } from 'date-fns';
 import clsx from 'clsx';
 import { PageProps } from '../navigation/types';
+import { currentStreak as computeCurrentStreak, longestStreak as computeLongestStreak } from '../lib/streak';
 
 // StreakView uses a subset of PageProps — the rest are received but unused.
 type StreakViewProps = PageProps;
@@ -17,36 +18,10 @@ export function StreakView({ onBack, goals, foods, profile }: StreakViewProps) {
     caloriesByDate.set(f.dateString, (caloriesByDate.get(f.dateString) ?? 0) + f.calories);
   }
 
-  // Current streak: consecutive days ending today (or yesterday if today is empty)
-  // that have at least one logged food.
-  let currentStreak = 0;
-  {
-    let cursor = today;
-    if (!caloriesByDate.has(format(cursor, 'yyyy-MM-dd'))) {
-      cursor = subDays(cursor, 1);
-    }
-    while (caloriesByDate.has(format(cursor, 'yyyy-MM-dd'))) {
-      currentStreak++;
-      cursor = subDays(cursor, 1);
-    }
-  }
-
-  // Longest streak across all logged days.
-  let longestStreak = 0;
-  {
-    const sorted = Array.from(caloriesByDate.keys()).sort();
-    let run = 0;
-    let prev: string | null = null;
-    for (const ds of sorted) {
-      if (prev && format(addDays(parseISO(prev), 1), 'yyyy-MM-dd') === ds) {
-        run += 1;
-      } else {
-        run = 1;
-      }
-      if (run > longestStreak) longestStreak = run;
-      prev = ds;
-    }
-  }
+  // Streaks come from the shared helper so the dashboard chip and this page
+  // can never disagree.
+  const currentStreak = computeCurrentStreak(foods);
+  const longestStreak = computeLongestStreak(foods);
 
   // Current week (Sun..Sat to match the column labels)
   const weekStart = startOfWeek(today, { weekStartsOn: 0 });

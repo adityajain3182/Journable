@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { Menu, Users } from 'lucide-react';
+import { Menu, Zap } from 'lucide-react';
 import { useNutrition } from './hooks/useNutrition';
 import { DateRibbon } from './components/DateRibbon';
 import { StatsCards } from './components/StatsCards';
@@ -15,6 +15,7 @@ import { AppLoader } from './components/AppLoader';
 import { SessionUser } from './lib/auth';
 import { useNav } from './navigation/useNav';
 import { getPageComponent, PageProps } from './navigation/routes';
+import { currentStreak } from './lib/streak';
 
 export default function App() {
   return (
@@ -73,7 +74,12 @@ function AppShell({ user }: { user: SessionUser }) {
     dailyTotals, dailyFoods,
     waterEntries,  addWaterEntry,  removeWaterEntry,
     weightEntries, addWeightEntry, removeWeightEntry,
+    photo, setPhoto,
   } = nutrition;
+
+  // Live current streak — recomputed on every food change because `foods`
+  // is a state value. Same helper that powers the weekly summary page.
+  const streak = currentStreak(foods);
 
   // Build the standard props bag once — every registered page receives this.
   const pageProps: PageProps = {
@@ -84,6 +90,7 @@ function AppShell({ user }: { user: SessionUser }) {
     profile, setProfile,
     waterEntries,  addWaterEntry,  removeWaterEntry,
     weightEntries, addWeightEntry, removeWeightEntry,
+    photo, setPhoto,
   };
 
   // If a registered full-page view is active, render it exclusively.
@@ -136,16 +143,30 @@ function AppShell({ user }: { user: SessionUser }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-zinc-400">
-          <button className="hover:text-white transition-colors">
-            <Users className="w-6 h-6" strokeWidth={2} />
-          </button>
-          <div
-            className="w-10 h-10 rounded-full bg-[#CCFF00] flex items-center justify-center text-black font-black text-sm"
-            title={user.displayName}
+        <div className="flex items-center gap-3 text-zinc-400">
+          {/* Streak chip — taps through to the weekly summary, computed from
+              the same shared helper so it can never drift from that page. */}
+          <button
+            onClick={() => nav.navigate('streak')}
+            className="flex items-center gap-1 px-2.5 py-1.5"
+            title={`${streak}-day streak — open weekly summary`}
+            aria-label={`${streak} day streak`}
           >
-            {initialsOf(user.displayName)}
-          </div>
+            <Zap className="w-3.5 h-3.5 text-[#CCFF00]" fill="#CCFF00" strokeWidth={2} />
+            <span className="text-[#CCFF00] text-sm font-black tabular-nums leading-none">
+              {streak}
+            </span>
+          </button>
+          <button
+            onClick={() => nav.navigate('profile')}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm overflow-hidden hover:scale-105 active:scale-95 transition-transform focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/40 ${photo ? 'bg-zinc-800' : 'bg-[#CCFF00] text-black font-black'}`}
+            title={`${user.displayName} — open profile`}
+            aria-label="Open profile"
+          >
+            {photo
+              ? <img src={photo} alt="" className="w-full h-full object-cover" />
+              : initialsOf(user.displayName)}
+          </button>
         </div>
       </header>
 
